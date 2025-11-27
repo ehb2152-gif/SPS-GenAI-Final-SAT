@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SAT Demo Playback</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Basic spinner animation */
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 4px solid #ffffff;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        /* Ensure math equations render correctly */
+        .whitespace-pre-wrap {
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-100 font-sans p-8 flex justify-center min-h-screen">
+
+    <main class="w-full max-w-2xl">
+        <header class="text-center mb-10">
+            <h1 class="text-4xl font-bold text-white">AI SAT Demo Playback</h1>
+            <p id="header-status" class="text-lg text-gray-400">Loading saved questions...</p>
+            <a href="/index.html" class="text-sm text-blue-400 hover:text-blue-300 transition duration-150 mt-1 inline-block">
+                (Back to Generator)
+            </a>
+        </header>
+
+        <!-- Generation Controls (Used for cycling questions) -->
+        <form id="cycle-form" class="bg-gray-800 p-6 rounded-lg shadow-xl mb-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Subject -->
+                <div>
+                    <label for="subject" class="block text-sm font-medium text-gray-300 mb-1">Subject</label>
+                    <select id="subject" name="subject" class="w-full bg-gray-700 text-white rounded-md border-gray-600 p-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="math">Math</option>
+                        <option value="verbal">Verbal</option>
+                    </select>
+                </div>
+
+                <!-- Difficulty -->
+                <div>
+                    <label for="difficulty" class="block text-sm font-medium text-gray-300 mb-1">Difficulty</label>
+                    <select id="difficulty" name="difficulty" class="w-full bg-gray-700 text-white rounded-md border-gray-600 p-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="easy">Easy</option>
+                        <option value="medium">Medium</option>
+                        <option value="hard">Hard</option>
+                        <option value="mixed">Mixed</option>
+                    </select>
+                </div>
+
+                <!-- Section -->
+                <div class="md:col-span-2">
+                    <label for="section" class="block text-sm font-medium text-gray-300 mb-1">Section (e.g., algebra, vocabulary)</label>
+                    <input type="text" id="section" name="section" value="algebra" class="w-full bg-gray-700 text-white rounded-md border-gray-600 p-2 focus:ring-blue-500 focus:border-blue-500" placeholder="algebra">
+                </div>
+            </div>
+
+            <!-- Submit Button (Recycled as Next/Cycle Button) -->
+            <div class="mt-6">
+                <button type="submit" id="cycle-btn" class="w-full flex justify-center items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg shadow-lg transition duration-300 disabled:opacity-50">
+                    <span id="cycle-btn-text">Show First Question (0)</span>
+                    <div id="spinner" class="spinner hidden"></div>
+                </button>
+            </div>
+        </form>
+        
+        <!-- Status Bar -->
+        <div id="status-bar" class="hidden bg-gray-700 p-2 rounded-lg shadow-inner mb-6 text-center text-sm font-semibold text-gray-300">
+            <span id="current-index-status"></span>
+        </div>
+
+
+        <!-- Output Section -->
+        <div id="output-section" class="space-y-6">
+            <!-- Question Card -->
+            <div id="question-card" class="hidden bg-gray-800 rounded-lg shadow-xl p-6">
+                <h2 class="text-xl font-semibold text-blue-300 mb-3">Generated Question</h2>
+                <p id="question-text" class="text-gray-200 text-lg whitespace-pre-wrap">Question text will appear here...</p>
+                <div class="mt-4 flex flex-col md:flex-row gap-3 items-center justify-between">
+                    <button id="reveal-btn" class="w-full md:w-auto bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300">
+                        Reveal Solution
+                    </button>
+                    <span id="answer-status" class="text-sm font-bold text-yellow-400"></span>
+                </div>
+            </div>
+
+            <!-- Solution Card -->
+            <div id="solution-card" class="hidden bg-gray-800 rounded-lg shadow-xl p-6 border-t-4 border-green-500">
+                <h2 class="text-xl font-semibold text-green-300 mb-3">Solution & Explanation</h2>
+                <p id="solution-text" class="text-gray-200 text-lg whitespace-pre-wrap"></p>
+            </div>
+        </div>
+    </main>
+
+    <script type="module">
+        // --- API Endpoint ---
+        const API_URL_LOAD = 'http://127.0.0.1:8000/api/demo/questions';
+
+        // --- DOM Elements ---
+        const cycleForm = document.getElementById('cycle-form');
+        const cycleBtn = document.getElementById('cycle-btn');
+        const cycleBtnText = document.getElementById('cycle-btn-text');
+        const headerStatusEl = document.getElementById('header-status');
+        const indexStatusEl = document.getElementById('current-index-status');
+        const statusBar = document.getElementById('status-bar');
+
+        const questionCard = document.getElementById('question-card');
+        const questionText = document.getElementById('question-text');
+        const solutionCard = document.getElementById('solution-card');
+        const solutionText = document.getElementById('solution-text');
+        const revealBtn = document.getElementById('reveal-btn');
+        const answerStatusEl = document.getElementById('answer-status');
+
+        const subjectSelect = document.getElementById('subject');
+        const difficultySelect = document.getElementById('difficulty');
+        const sectionInput = document.getElementById('section');
+
+
+        // --- State ---
+        let savedQuestions = [];
+        let currentIndex = -1; // Start before the first index to load Q0 first
+        
+        // --- Event Listeners ---
+        cycleForm.addEventListener('submit', handleCycleSubmit);
+        revealBtn.addEventListener('click', handleRevealClick);
+
+        // --- Functions ---
+
+        async function loadDemoQuestions() {
+            try {
+                headerStatusEl.innerText = "Loading saved questions...";
+                const response = await fetch(API_URL_LOAD);
+                if (!response.ok) {
+                    throw new Error(`Failed to load demo questions: ${response.status}`);
+                }
+                const data = await response.json();
+                savedQuestions = data;
+
+                if (savedQuestions.length === 0) {
+                    headerStatusEl.innerText = "No questions saved. Please use the Generator page first.";
+                    cycleBtnText.innerText = "No Questions Available";
+                    cycleBtn.disabled = true;
+                } else {
+                    headerStatusEl.innerText = `${savedQuestions.length} Saved Questions Ready for Demo.`;
+                    cycleBtnText.innerText = "Show First Question (0)";
+                    cycleBtn.disabled = false;
+                    
+                    // Populate form fields with options (make sure they are not disabled)
+                    populateFormOptions(); 
+                }
+            } catch (error) {
+                console.error("Demo load failed:", error);
+                headerStatusEl.innerText = "ERROR: Could not load demo data. Check Python terminal.";
+                cycleBtn.disabled = true;
+            }
+        }
+
+        function populateFormOptions() {
+            // These dropdowns are populated with standard options for demo interaction
+            const subjects = ['Math', 'Verbal'];
+            const difficulties = ['Easy', 'Medium', 'Hard', 'Mixed'];
+
+            // Clear existing options
+            subjectSelect.innerHTML = '';
+            difficultySelect.innerHTML = '';
+
+            subjects.forEach(s => {
+                const option = document.createElement('option');
+                option.value = s.toLowerCase();
+                option.innerText = s;
+                subjectSelect.appendChild(option);
+            });
+
+            difficulties.forEach(d => {
+                const option = document.createElement('option');
+                option.value = d.toLowerCase();
+                option.innerText = d;
+                difficultySelect.appendChild(option);
+            });
+            
+            // Set initial state based on the first saved question (if available)
+            if (savedQuestions.length > 0) {
+                 const q0 = savedQuestions[0];
+                 if (q0.subject) subjectSelect.value = q0.subject.toLowerCase();
+                 if (q0.difficulty) difficultySelect.value = q0.difficulty.toLowerCase();
+                 if (q0.section) sectionInput.value = q0.section;
+            } else {
+                subjectSelect.value = 'math';
+                difficultySelect.value = 'easy';
+            }
+        }
+
+
+        function handleCycleSubmit(event) {
+            event.preventDefault();
+            
+            if (savedQuestions.length === 0) return;
+
+            // Increment index, looping back to 0 if necessary
+            currentIndex = (currentIndex + 1) % savedQuestions.length;
+            
+            displayQuestion(savedQuestions[currentIndex]);
+        }
+
+        function displayQuestion(q) {
+            // 1. Reset UI
+            solutionCard.classList.add('hidden');
+            revealBtn.style.display = 'block';
+            questionCard.classList.remove('hidden');
+            statusBar.classList.remove('hidden');
+            answerStatusEl.innerText = "Solution Hidden.";
+            
+            // 2. Update Form Fields to reflect the saved question's metadata
+            // FIX: Ensure case-insensitive matching
+            if (q.subject) subjectSelect.value = q.subject.toLowerCase();
+            if (q.difficulty) difficultySelect.value = q.difficulty.toLowerCase();
+            if (q.section) sectionInput.value = q.section;
+
+            // 3. Update Question Content
+            questionText.innerText = q.question;
+            solutionText.innerText = q.solution || "Solution not available/parsed on save.";
+
+            // 4. Update Status Bar
+            indexStatusEl.innerText = `Question ${currentIndex + 1} of ${savedQuestions.length} | Topic: ${q.subject.toUpperCase()}`;
+            cycleBtnText.innerText = `Next Question (${(currentIndex + 2 > savedQuestions.length ? 1 : currentIndex + 2)} of ${savedQuestions.length})`;
+            
+            // 5. Check if the question is malformed (missing solution)
+            if (!q.solution) {
+                 answerStatusEl.innerText = "❌ Warning: Solution Data Missing for this question.";
+                 revealBtn.disabled = true;
+            } else {
+                 revealBtn.disabled = false;
+            }
+        }
+
+        function handleRevealClick() {
+            solutionCard.classList.remove('hidden');
+            revealBtn.style.display = 'none';
+            answerStatusEl.innerText = "Solution Revealed.";
+        }
+        
+        // --- Initialization ---
+        window.onload = loadDemoQuestions;
+
+    </script>
+</body>
+</html>

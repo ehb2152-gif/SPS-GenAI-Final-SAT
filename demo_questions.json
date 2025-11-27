@@ -1,0 +1,37 @@
+[
+    {
+        "question": "Please select a topic area and a specific algebra variable, and create a math question that is suitable for the SAT.\n\nTopic Area: Algebra\nVariable: x\n\nQuestion: The following equation is true for all real values of x:\n2x + 5 = 3x - 2\n\nA) 2x - 5 = 3x + 2\nB) 3x - 2 = 2x + 5\nC) 2x - 3 = 3x + 5\nD) x = 7\n\nWhat is the correct answer?",
+        "solution": "Explanation: The correct answer is B. To solve this problem, subtract 2x from both sides of the equation and simplify: 2x - 2x + 5 = 3x - 2x - 2x + 2, which simplifies to 5 = x + 2. Subtract 2 from both sides of this equation: 5 - 2 = x + 2 - 2, which simplifies to 3 = x. Therefore, the correct answer is B.Choice A is incorrect. The correct answer is B. To solve this problem, subtract 2x from both sides of the equation and simplify: 2",
+        "subject": "math",
+        "difficulty": "easy",
+        "section": "algebra"
+    },
+    {
+        "question": "Please provide the question and answer options.\n\nHere's your SAT math question:\n\nWhat is the value of x in the following equation:\n\n2x + 5 = 11\n\nA) 2\nB) 3\nC) 4\nD) 5",
+        "solution": "The correct answer is B. To solve this problem, subtract 5 from both sides of the equation, and then divide both sides by 2. This results in x = 3.",
+        "subject": "math",
+        "difficulty": "easy",
+        "section": "algebra"
+    },
+    {
+        "question": "Here's your task:\n\nSelect the correct answer from the options provided for the following question:\n\nWhich of the following words is most closely related to the concept of \"perspicacious\" in the context of the sentence \"The detective was so perspicacious that he solved the crime in just three days\"?\n\nA) Inquisitive\nB) Perceptive\nC) Vigilant\nD) Attentive\n\nCorrect",
+        "solution": "answer: B) Perceptive\n\nExplanation: The correct answer is B) Perceptive. This word is most closely related to the concept of \"perspicacious\" because both words describe the ability to notice and understand details. A perceptive person is able to perceive details that others may miss. In the context of the sentence, the detective was so perceptive that he solved the crime in just three days.",
+        "subject": "verbal",
+        "difficulty": "medium",
+        "section": "vocabulary"
+    },
+    {
+        "question": "Here is a potential question:\n\nQuestion: The word \"perspicacious\" (12 letters) is used to describe someone who is: __________\n\nA) Having a strong sense of personal opinion\nB) Able to notice and understand things that are not immediately apparent\nC) Having a tendency to be overly critical or judgmental\nD) Being able to distinguish between different ideas or concepts\n\nCorrect",
+        "solution": "answer: B",
+        "subject": "verbal",
+        "difficulty": "medium",
+        "section": "vocabulary"
+    },
+    {
+        "question": "Please respond with the question and the answer choice(s) in the format: \"Question: [Answer Choices].\"\n\nQuestion: What is the value of x in the equation x^2 + 5x + 6 = 0?\n\nA) -2\nB) -3\nC) -1\nD) 2",
+        "solution": "Answer: B",
+        "subject": "math",
+        "difficulty": "easy",
+        "section": "algebra"
+    }
+]

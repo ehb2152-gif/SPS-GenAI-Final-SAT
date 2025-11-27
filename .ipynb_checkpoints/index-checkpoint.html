@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI SAT Test Generator</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Basic spinner animation */
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 4px solid #ffffff;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-100 font-sans p-8 flex justify-center min-h-screen">
+
+    <main class="w-full max-w-2xl">
+        <header class="text-center mb-10">
+            <h1 class="text-4xl font-bold text-white">AI SAT Test Generator</h1>
+            <p class="text-lg text-gray-400">Powered by your fine-tuned Llama models</p>
+        </header>
+
+        <!-- Generation Controls -->
+        <form id="generate-form" class="bg-gray-800 p-6 rounded-lg shadow-xl mb-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <!-- Subject -->
+                <div>
+                    <label for="subject" class="block text-sm font-medium text-gray-300 mb-1">Subject</label>
+                    <select id="subject" name="subject" class="w-full bg-gray-700 text-white rounded-md border-gray-600 p-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="math">Math</option>
+                        <option value="verbal">Verbal</option>
+                    </select>
+                </div>
+
+                <!-- Difficulty -->
+                <div>
+                    <label for="difficulty" class="block text-sm font-medium text-gray-300 mb-1">Difficulty</label>
+                    <select id="difficulty" name="difficulty" class="w-full bg-gray-700 text-white rounded-md border-gray-600 p-2 focus:ring-blue-500 focus:border-blue-500">
+                        <option value="easy">Easy</option>
+                        <option value="medium">Medium</option>
+                        <option value="hard">Hard</option>
+                        <option value="mixed">Mixed</option>
+                    </select>
+                </div>
+
+                <!-- Section -->
+                <div class="md:col-span-2">
+                    <label for="section" class="block text-sm font-medium text-gray-300 mb-1">Section (e.g., algebra, vocabulary)</label>
+                    <input type="text" id="section" name="section" value="algebra" class="w-full bg-gray-700 text-white rounded-md border-gray-600 p-2 focus:ring-blue-500 focus:border-blue-500" placeholder="algebra">
+                </div>
+            </div>
+
+            <!-- Include Solutions Checkbox -->
+            <div class="mt-4 flex items-center">
+                <input id="include_solutions" name="include_solutions" type="checkbox" class="h-4 w-4 rounded bg-gray-700 border-gray-600 text-blue-600 focus:ring-blue-500">
+                <label for="include_solutions" class="ml-2 block text-sm text-gray-300">Include solution immediately</label>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="mt-6">
+                <button type="submit" id="generate-btn" class="w-full flex justify-center items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg shadow-lg transition duration-300">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                        <path d="M11.57 2.663a.5.5 0 0 1 .4.2l.063.114a.5.5 0 0 1 .03.354l-.063.114a.5.5 0 0 1-.2.25l-.114.063a.5.5 0 0 1-.354.03l-.114-.063a.5.5 0 0 1-.25-.2l-.063-.114a.5.5 0 0 1-.03-.354l.063-.114a.5.5 0 0 1 .25-.2l.114-.063a.5.5 0 0 1 .354-.03ZM8 0a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 0Zm0 13a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2a.5.5 0 0 1 .5-.5ZM4.43 2.663a.5.5 0 0 1 .4.2l.063.114a.5.5 0 0 1 .03.354l-.063.114a.5.5 0 0 1-.2.25l-.114.063a.5.5 0 0 1-.354.03l-.114-.063a.5.5 0 0 1-.25-.2l-.063-.114a.5.5 0 0 1-.03-.354l.063-.114a.5.5 0 0 1 .25-.2l.114-.063a.5.5 0 0 1 .354-.03Z"/>
+                        <path d="M8 3a5 5 0 1 0 0 10A5 5 0 0 0 8 3ZM6.32 4.937a.5.5 0 0 1 .499.03l.063.03a.5.5 0 0 1 .25.4l-.03.063a.5.5 0 0 1-.4.25l-.063.03a.5.5 0 0 1-.499-.03l-.063-.03a.5.5 0 0 1-.25-.4l.03-.063a.5.5 0 0 1 .4-.25l.063-.03Zm3.36 0a.5.5 0 0 1 .499.03l.063.03a.5.5 0 0 1 .25.4l-.03.063a.5.5 0 0 1-.4.25l-.063.03a.5.5 0 0 1-.499-.03l-.063-.03a.5.5 0 0 1-.25-.4l.03-.063a.5.5 0 0 1 .4-.25l.063-.03Z"/>
+                    </svg>
+                    <span id="generate-btn-text">Generate Question</span>
+                    <div id="spinner" class="spinner hidden"></div>
+                </button>
+            </div>
+        </form>
+
+        <!-- Error Display -->
+        <div id="error-box" class="hidden bg-red-800 text-red-100 p-4 rounded-lg shadow-lg mb-6">
+            <h3 class="font-bold">Error</h3>
+            <p id="error-message"></p>
+        </div>
+
+        <!-- Output Section -->
+        <div id="output-section" class="space-y-6">
+            <!-- Question Card -->
+            <div id="question-card" class="hidden bg-gray-800 rounded-lg shadow-xl p-6">
+                <h2 class="text-xl font-semibold text-blue-300 mb-3">Generated Question</h2>
+                <p id="question-text" class="text-gray-200 text-lg whitespace-pre-wrap"></p>
+                <button id="reveal-btn" class="hidden mt-4 bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded-lg transition duration-300">
+                    Reveal Solution
+                </button>
+            </div>
+
+            <!-- Solution Card -->
+            <div id="solution-card" class="hidden bg-gray-800 rounded-lg shadow-xl p-6 border-t-4 border-green-500">
+                <h2 class="text-xl font-semibold text-green-300 mb-3">Solution & Explanation</h2>
+                <p id="solution-text" class="text-gray-200 text-lg whitespace-pre-wrap"></p>
+            </div>
+        </div>
+    </main>
+
+    <script type="module">
+        // --- DOM Elements ---
+        const generateForm = document.getElementById('generate-form');
+        const generateBtn = document.getElementById('generate-btn');
+        const generateBtnText = document.getElementById('generate-btn-text');
+        const spinner = document.getElementById('spinner');
+        
+        const errorBox = document.getElementById('error-box');
+        const errorMessage = document.getElementById('error-message');
+        
+        const questionCard = document.getElementById('question-card');
+        const questionText = document.getElementById('question-text');
+        
+        const solutionCard = document.getElementById('solution-card');
+        const solutionText = document.getElementById('solution-text');
+        
+        const revealBtn = document.getElementById('reveal-btn');
+
+        // --- State ---
+        let currentSessionId = null;
+
+        // --- Event Listeners ---
+        generateForm.addEventListener('submit', handleGenerateSubmit);
+        revealBtn.addEventListener('click', handleRevealClick);
+
+        // --- Functions ---
+        async function handleGenerateSubmit(event) {
+            event.preventDefault();
+            
+            // 1. Get form data
+            const formData = new FormData(generateForm);
+            const requestBody = {
+                subject: formData.get('subject'),
+                section: formData.get('section'),
+                difficulty: formData.get('difficulty'),
+                include_solutions: formData.get('include_solutions') === 'on'
+            };
+
+            // 2. Set UI to loading state
+            setLoading(true);
+            hideError();
+            hideResults();
+            currentSessionId = null;
+
+            try {
+                // 3. Call API
+                // IMPORTANT: Assumes your FastAPI backend is running on the same host.
+                // If it's on a different port (e.g., :8000), you must use the full URL:
+                // const response = await fetch('http://localhost:8000/api/generate', { ... });
+                
+                const response = await fetch('/api/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestBody),
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'An unknown error occurred.');
+                }
+
+                const data = await response.json();
+                
+                // 4. Handle response
+                currentSessionId = data.session_id;
+                
+                // Display the question
+                questionText.innerText = data.question;
+                questionCard.classList.remove('hidden');
+
+                if (data.solution) {
+                    // Solution was included
+                    solutionText.innerText = data.solution;
+                    solutionCard.classList.remove('hidden');
+                    revealBtn.classList.add('hidden');
+                } else {
+                    // Solution was not included, show reveal button
+                    revealBtn.classList.remove('hidden');
+                }
+
+            } catch (error) {
+                showError(error.message);
+            } finally {
+                setLoading(false);
+            }
+        }
+
+        async function handleRevealClick() {
+            if (!currentSessionId) return;
+
+            setLoading(true, revealBtn); // Use button as loading indicator
+            hideError();
+
+            try {
+                // const response = await fetch('http://localhost:8000/api/reveal_solutions', { ... });
+                const response = await fetch('/api/reveal_solutions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ session_id: currentSessionId }),
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.detail || 'Could not fetch solution.');
+                }
+
+                const data = await response.json();
+
+                // Display solution
+                solutionText.innerText = data.solution;
+                solutionCard.classList.remove('hidden');
+                revealBtn.classList.add('hidden');
+
+            } catch (error) {
+                showError(error.message);
+            } finally {
+                setLoading(false, revealBtn);
+            }
+        }
+        
+        // UI Helper Functions 
+
+        function setLoading(isLoading, button = generateBtn) {
+            if (button === generateBtn) {
+                // Main generate button
+                spinner.classList.toggle('hidden', !isLoading);
+                generateBtnText.classList.toggle('hidden', isLoading);
+                button.disabled = isLoading;
+            } else {
+                // Reveal button
+                button.disabled = isLoading;
+                button.innerText = isLoading ? 'Loading...' : 'Reveal Solution';
+            }
+        }
+
+        function hideResults() {
+            questionCard.classList.add('hidden');
+            solutionCard.classList.add('hidden');
+            revealBtn.classList.add('hidden');
+            questionText.innerText = '';
+            solutionText.innerText = '';
+        }
+
+        function showError(message) {
+            errorMessage.innerText = message;
+            errorBox.classList.remove('hidden');
+        }
+
+        function hideError() {
+            errorBox.classList.add('hidden');
+            errorMessage.innerText = '';
+        }
+    </script>
+</body>
+</html>
