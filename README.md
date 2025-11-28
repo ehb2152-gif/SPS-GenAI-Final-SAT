@@ -19,7 +19,6 @@ app/                    # Main Application Source Code
 ├── main.py             # FastAPI entry point & static file mounting
 ├── routes_generate.py  # Core logic: Inference, Cleaning, & DB handling
 ├── index.html          # Main User Interface (Generator)
-├── demo.html           # Demo Playback Interface
 ├── db_manager.py       # Database utilities
 ├── prompts.py          # Prompt templates
 └── utils_model.py      # Model utility functions
